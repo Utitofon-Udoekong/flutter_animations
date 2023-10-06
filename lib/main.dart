@@ -60,7 +60,9 @@ class _CurvedSliderState extends State<CurvedSlider> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: RotatedBox(
+      child: Transform.flip(
+        flipY: true,
+        child: RotatedBox(
         quarterTurns: -1,
         child: GestureDetector(
                     onHorizontalDragUpdate: (details) =>
@@ -82,6 +84,7 @@ class _CurvedSliderState extends State<CurvedSlider> {
                       ),
                     ),
                   ),
+      )
       ),
     );
   }
