@@ -1,16 +1,12 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_animations/slider.dart';
 
-class WavePainter extends CustomPainter {
+class XSliderPaint extends CustomPainter {
   final double sliderPosition;
   final double dragPercentage;
   final double animationProgress;
 
-  final SliderState sliderState;
-
-  final Color color;
 
   final Paint wavePainter;
   final Paint fillPainter;
@@ -18,86 +14,38 @@ class WavePainter extends CustomPainter {
   /// Previous slider position initialised at 0.0
   double _previousSliderPosition = 0.0;
 
-  WavePainter({
+  XSliderPaint({
     required this.sliderPosition,
     required this.dragPercentage,
     required this.animationProgress,
-    required this.sliderState,
-    required this.color,
-  })  : wavePainter = Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.5,
-        fillPainter = Paint()
-          ..color = color
+    required this.wavePainter,
+  }) : fillPainter = Paint()
+          ..color = Colors.white
           ..style = PaintingStyle.fill;
 
   @override
   void paint(Canvas canvas, Size size) {
-    _paintAnchors(canvas, size);
-
-    switch (sliderState) {
-      case SliderState.starting:
-        _paintStartupWave(canvas, size);
-        break;
-      case SliderState.resting:
-        _paintRestingWave(canvas, size);
-        break;
-      case SliderState.sliding:
-        _paintSlidingWave(canvas, size);
-        break;
-      case SliderState.stopping:
-        _paintStoppingWave(canvas, size);
-        break;
-      default:
-        _paintSlidingWave(canvas, size);
-        break;
-    }
-  }
-
-  _paintAnchors(Canvas canvas, Size size) {
-    canvas.drawCircle(Offset(0.0, size.height), 5.0, fillPainter);
-    canvas.drawCircle(Offset(size.width, size.height), 5.0, fillPainter);
-  }
-
-  _paintRestingWave(Canvas canvas, Size size) {
-    Path path = Path();
-    path.moveTo(0.0, size.height);
-    path.lineTo(size.width, size.height);
-    canvas.drawPath(path, wavePainter);
-  }
-
-  _paintStartupWave(Canvas canvas, Size size) {
     WaveCurveDefinitions line = _calculateWaveLineDefinitions(size);
-
-    double waveHeight = lerpDouble(
+    double waveHeight = ui.lerpDouble(
         size.height,
         line.controlHeight,
-        Curves.elasticOut.transform(animationProgress))!;
+        Curves.elasticOut.transform(animationProgress)
+        )!;
     line.controlHeight = waveHeight;
-    _paintWaveLine(canvas, size, line);
-  }
-
-  _paintSlidingWave(Canvas canvas, Size size) {
-    WaveCurveDefinitions line = _calculateWaveLineDefinitions(size);
-    _paintWaveLine(canvas, size, line);
-  }
-
-  _paintStoppingWave(Canvas canvas, Size size) {
-    WaveCurveDefinitions line = _calculateWaveLineDefinitions(size);
-
-    double waveHeight = lerpDouble(line.controlHeight,
-        size.height, Curves.elasticOut.transform(animationProgress))!;
-
-    line.controlHeight = waveHeight;
-
     _paintWaveLine(canvas, size, line);
   }
 
   _paintWaveLine(Canvas canvas, Size size, WaveCurveDefinitions waveCurve) {
     Path path = Path();
-    path.moveTo(0.0, size.height);
-    path.lineTo(waveCurve.startOfBezier, size.height);
+    path.moveTo(size.width, 0.0);
+    path.lineTo(size.width, waveCurve.startOfBezier);
+    // path.cubicTo(
+    //     0,
+    //     1.03,
+    //     .62,
+    //     size.width,
+    //     waveCurve.centerPoint,
+    //     size.width);
     path.cubicTo(
         waveCurve.leftControlPoint1,
         size.height,
@@ -118,17 +66,16 @@ class WavePainter extends CustomPainter {
   }
 
   WaveCurveDefinitions _calculateWaveLineDefinitions(Size size) {
-    double minWaveHeight = size.height * 0.2;
+    // double minWaveHeight = size.height * 0.2;
     double maxWaveHeight = size.height * 0.8;
 
-    double controlHeight =
-        (size.height - minWaveHeight) - (maxWaveHeight * dragPercentage);
+    double controlHeight = size.height - (maxWaveHeight * dragPercentage);
 
     double bendWidth = 20 + 20 * dragPercentage;
     double bezierWidth = 20 + 20 * dragPercentage;
 
     double centerPoint = sliderPosition;
-    centerPoint = (centerPoint > size.width) ? size.width : centerPoint;
+    centerPoint = (centerPoint > size.height) ? size.height : centerPoint;
 
     double startOfBend = centerPoint - bendWidth / 2;
     double startOfBezier = startOfBend - bezierWidth;
@@ -137,8 +84,8 @@ class WavePainter extends CustomPainter {
 
     startOfBend = (startOfBend <= 0.0) ? 0.0 : startOfBend;
     startOfBezier = (startOfBezier <= 0.0) ? 0.0 : startOfBezier;
-    endOfBend = (endOfBend > size.width) ? size.width : endOfBend;
-    endOfBezier = (endOfBezier > size.width) ? size.width : endOfBezier;
+    endOfBend = (endOfBend > size.height) ? size.height : endOfBend;
+    endOfBezier = (endOfBezier > size.height) ? size.height : endOfBezier;
 
     double leftBendControlPoint1 = startOfBend;
     double leftBendControlPoint2 = startOfBend;
@@ -154,7 +101,7 @@ class WavePainter extends CustomPainter {
         : slideDifference;
 
     double bend =
-        lerpDouble(0.0, bendability, slideDifference / maxSlideDifference)!;
+        ui.lerpDouble(0.0, bendability, slideDifference / maxSlideDifference)!;
     bool moveLeft = sliderPosition < _previousSliderPosition;
     bend = moveLeft ? -bend : bend;
 
@@ -180,7 +127,7 @@ class WavePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(WavePainter oldDelegate) {
+  bool shouldRepaint(XSliderPaint oldDelegate) {
     double diff = _previousSliderPosition - oldDelegate.sliderPosition;
     if (diff.abs() > 20) {
       _previousSliderPosition = sliderPosition;
@@ -190,6 +137,7 @@ class WavePainter extends CustomPainter {
     return true;
   }
 }
+
 
 class WaveCurveDefinitions {
   double startOfBezier;
