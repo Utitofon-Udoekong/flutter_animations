@@ -34,7 +34,8 @@ class XSliderPaint extends CustomPainter {
     line.controlHeight = waveHeight;
     _paintWaveLine(canvas, size, line);
   }
-
+  ///Paint the vertical waveline from the [startOfBezier] to the
+  /// renderbox height
   _paintWaveLine(Canvas canvas, Size size, WaveCurveDefinitions waveCurve) {
     Path path = Path();
     path.moveTo(size.width, 0.0);
@@ -46,20 +47,22 @@ class XSliderPaint extends CustomPainter {
     //     size.width,
     //     waveCurve.centerPoint,
     //     size.width);
+    /// Draw an arc from the [leftControlPoint] to the centerpoint
     path.cubicTo(
         waveCurve.leftControlPoint1,
-        size.height,
+        size.width,
         waveCurve.leftControlPoint2,
         waveCurve.controlHeight,
         waveCurve.centerPoint,
         waveCurve.controlHeight);
+    /// Draw an arc from the [controlHeight] at the centerPoint to the [endOfBezier]
     path.cubicTo(
         waveCurve.rightControlPoint1,
         waveCurve.controlHeight,
         waveCurve.rightControlPoint2,
-        size.height,
+        size.width,
         waveCurve.endOfBezier,
-        size.height);
+        size.width);
     path.lineTo(size.width, size.height);
 
     canvas.drawPath(path, wavePainter);
@@ -67,12 +70,12 @@ class XSliderPaint extends CustomPainter {
 
   WaveCurveDefinitions _calculateWaveLineDefinitions(Size size) {
     // double minWaveHeight = size.height * 0.2;
-    double maxWaveHeight = size.height * 0.8;
+    // double maxWaveHeight = size.width * 0.8;
 
-    double controlHeight = size.height - (maxWaveHeight * dragPercentage);
+    double controlHeight = size.width;
 
-    double bendWidth = 20 + 20 * dragPercentage;
-    double bezierWidth = 20 + 20 * dragPercentage;
+    double bendWidth = 40;
+    double bezierWidth = 40;
 
     double centerPoint = sliderPosition;
     centerPoint = (centerPoint > size.height) ? size.height : centerPoint;
